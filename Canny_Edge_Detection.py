@@ -144,7 +144,10 @@ def canny_edge_detection(image_path):
     
     # Save the output image with "_edge.png" suffix
     output_file_name = image_path[10:-4] + "_edge.png"
-    cv2.imwrite(output_file_name, final_edges)
+    try:
+        cv2.imwrite(output_file_name, final_edges)
+    except cv2.error as e:
+        print(f"Error saving the output file {output_file_name}: {e}")
     print("Saving output!")
     
     # Display the original and the edge-detected image
@@ -196,8 +199,19 @@ if __name__ == "__main__":
             continue
 
     print(f"You chose {chosen_image}")
-    image_grayscale = convert_to_grayscale(chosen_image)
-    image_grayscale.save("grayscale_" + chosen_image)
+
+    try:
+        image_grayscale = convert_to_grayscale(chosen_image)
+    except:
+        print("Error converting the image to grayscale.")
+        sys.exit(1)
+
+    try:
+        image_grayscale.save("grayscale_" + chosen_image)
+    except:
+        print("Error saving the grayscale image.")
+        sys.exit(1)
+   
     canny_edge_detection("grayscale_" + chosen_image)
 
 
