@@ -134,8 +134,8 @@ def canny_edge_detection(image_path):
     
     # Step 5: Apply double threshold to determine potential edges
     print("Applying double thresholding...")
-    low_threshold = 1
-    high_threshold = 10
+    low_threshold = 5
+    high_threshold = 30
     threshold_img, weak, strong = threshold(non_max_img, low_threshold, high_threshold)
     
     # Step 6: Perform edge tracking by hysteresis
