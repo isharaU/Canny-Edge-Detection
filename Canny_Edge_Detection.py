@@ -1,12 +1,13 @@
 import os
+import cv2
+import numpy as np
+from PIL import Image
 
 # see jpg,png or bmp files in the directory
 valid_extensions = [".jpg", ".png", ".bmp"]
 
-# get the current working directory
-current_directory = os.getcwd()
-
 # list all files in the current directory
+current_directory = os.getcwd()
 files = [f for f in os.listdir(current_directory) if os.path.isfile(os.path.join(current_directory, f))]
 
 # filter out the files with valid extensions
@@ -34,6 +35,19 @@ while True:
 
 print(f"You chose {chosen_image}")
 
+# convert to grayscale 
+def convert_to_grayscale(image_path):
+    img = Image.open(image_path)
+    img_array = np.array(img)
 
+    # handeling aplha channel
+    if img_array.shape[2] == 4:
+        img_array = img_array[:, :, :3]
+        
+    grayscale_img = np.dot(img_array[...,:3], [0.299, 0.587, 0.114])
+    grayscale_img = grayscale_img.astype(np.uint8)
+    return Image.fromarray(grayscale_img)
 
+grayscale_image = convert_to_grayscale(chosen_image)
+grayscale_image.show()  # Display the grayscale image
 
