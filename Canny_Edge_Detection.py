@@ -39,40 +39,47 @@ def sobel_filters(img):
     theta = np.arctan2(i_y, i_x)
     return G, theta
 
-# Helper function for non-maximum suppression
 def non_max_suppression(gradient, theta):
     M, N = gradient.shape
     Z = np.zeros((M, N), dtype=np.int32)
     angle = theta * 180.0 / np.pi
     angle[angle < 0] += 180
-    
+
+    # Define direction based on angle
+    directions = np.zeros((M, N), dtype=np.int32)
+
+    # Determine the direction of the edge based on the angle
+    directions[(angle >= 0) & (angle < 22.5) | (angle >= 157.5) & (angle <= 180)] = 0
+    directions[(angle >= 22.5) & (angle < 67.5)] = 1
+    directions[(angle >= 67.5) & (angle < 112.5)] = 2
+    directions[(angle >= 112.5) & (angle < 157.5)] = 3
+
+    # Shift the image to compare neighboring pixels
     for i in range(1, M-1):
         for j in range(1, N-1):
-            q, r = 255, 255
-            
-            # Horizontal edge (0 degrees)
-            if (0 <= angle[i, j] < 22.5) or (157.5 <= angle[i, j] <= 180):
+            q = 255
+            r = 255
+            if directions[i, j] == 0:  # 0 degrees (horizontal)
                 q = gradient[i, j+1]
                 r = gradient[i, j-1]
-            # Diagonal (45 degrees)
-            elif 22.5 <= angle[i, j] < 67.5:
+            elif directions[i, j] == 1:  # 45 degrees (diagonal)
                 q = gradient[i+1, j-1]
                 r = gradient[i-1, j+1]
-            # Vertical (90 degrees)
-            elif 67.5 <= angle[i, j] < 112.5:
+            elif directions[i, j] == 2:  # 90 degrees (vertical)
                 q = gradient[i+1, j]
                 r = gradient[i-1, j]
-            # Diagonal (135 degrees)
-            elif 112.5 <= angle[i, j] < 157.5:
+            elif directions[i, j] == 3:  # 135 degrees (diagonal)
                 q = gradient[i-1, j-1]
                 r = gradient[i+1, j+1]
-            
-            if (gradient[i, j] >= q) and (gradient[i, j] >= r):
+
+            # Only keep the maximum values
+            if gradient[i, j] >= q and gradient[i, j] >= r:
                 Z[i, j] = gradient[i, j]
             else:
                 Z[i, j] = 0
-    
+
     return Z
+
 
 # Helper function for double thresholding
 def threshold(img, low_threshold, high_threshold):
@@ -102,42 +109,63 @@ def hysteresis(img, weak, strong=255):
                     img[i, j] = 0
     return img
 
-# Main function to apply Canny Edge Detection
 def canny_edge_detection(image_path):
+    # Step 1: Read the image in grayscale
+    print("Reading...")
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    
-    # Step 1: Apply Gaussian Blur to smooth the image
+
+    # Resize the image before processing
+    max_width = 800  # Set your desired max width
+    max_height = 600  # Set your desired max height
+    img_resized = resize_image(img, max_width, max_height)
+
+    # Step 2: Apply Gaussian Blur to smooth the image
+    print("Applying Gaussian Blur...")
     gaussian_kernel_size = 5
-    blurred_img = cv2.filter2D(img, -1, gaussian_kernel(gaussian_kernel_size, sigma=1.4))
+    blurred_img = cv2.filter2D(img_resized, -1, gaussian_kernel(gaussian_kernel_size, sigma=1.4))
     
-    # Step 2: Apply Sobel filters to find intensity gradients
+    # Step 3: Apply Sobel filters to find intensity gradients
+    print("Applying sobel filter...")
     gradient_magnitude, gradient_direction = sobel_filters(blurred_img)
-    print("Sobel filter applied...")
     
-    # Step 3: Perform Non-Maximum Suppression to thin the edges
+    # Step 4: Perform Non-Maximum Suppression to thin the edges
+    print("Applying non-maximum suppression...")
     non_max_img = non_max_suppression(gradient_magnitude, gradient_direction)
-    print("Non-maximum suppression applied...")
     
-    # Step 4: Apply double threshold to determine potential edges
+    # Step 5: Apply double threshold to determine potential edges
+    print("Applying double thresholding...")
     low_threshold = 50
     high_threshold = 150
     threshold_img, weak, strong = threshold(non_max_img, low_threshold, high_threshold)
-    print("Double thresholding applied...")
     
-    # Step 5: Perform edge tracking by hysteresis
+    # Step 6: Perform edge tracking by hysteresis
+    print("Performing edge tracking...")
     final_edges = hysteresis(threshold_img, weak, strong)
-    print("Edge tracking by hysteresis applied...")
-    # Save the output image with "_edge.png" suffix
     
+    # Save the output image with "_edge.png" suffix
     output_file_name = os.path.splitext(image_path)[0] + "_edge.png"
     cv2.imwrite(output_file_name, final_edges)
-    print("Output image saved!")
+    print("Saving output!")
     
     # Display the original and the edge-detected image
-    cv2.imshow('Original Image', img)
+    cv2.imshow('Original Image', img_resized)
     cv2.imshow('Canny Edge Detection', final_edges)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
+
+def resize_image(image, max_width, max_height):
+    height, width = image.shape[:2]
+    aspect_ratio = width / height
+
+    if width > height:
+        new_width = min(max_width, width)
+        new_height = int(new_width / aspect_ratio)
+    else:
+        new_height = min(max_height, height)
+        new_width = int(new_height * aspect_ratio)
+
+    return cv2.resize(image, (new_width, new_height))
+
 
 if __name__ == "__main__":
     # list all files in the current directory
