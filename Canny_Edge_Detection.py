@@ -128,6 +128,7 @@ def canny_edge_detection(image_path):
     final_edges = hysteresis(threshold_img, weak, strong)
     print("Edge tracking by hysteresis applied...")
     # Save the output image with "_edge.png" suffix
+    
     output_file_name = os.path.splitext(image_path)[0] + "_edge.png"
     cv2.imwrite(output_file_name, final_edges)
     print("Output image saved!")
