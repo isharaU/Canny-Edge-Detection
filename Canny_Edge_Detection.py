@@ -112,21 +112,25 @@ def canny_edge_detection(image_path):
     
     # Step 2: Apply Sobel filters to find intensity gradients
     gradient_magnitude, gradient_direction = sobel_filters(blurred_img)
+    print("Sobel filter applied...")
     
     # Step 3: Perform Non-Maximum Suppression to thin the edges
     non_max_img = non_max_suppression(gradient_magnitude, gradient_direction)
+    print("Non-maximum suppression applied...")
     
     # Step 4: Apply double threshold to determine potential edges
     low_threshold = 50
     high_threshold = 150
     threshold_img, weak, strong = threshold(non_max_img, low_threshold, high_threshold)
+    print("Double thresholding applied...")
     
     # Step 5: Perform edge tracking by hysteresis
     final_edges = hysteresis(threshold_img, weak, strong)
-    
+    print("Edge tracking by hysteresis applied...")
     # Save the output image with "_edge.png" suffix
     output_file_name = os.path.splitext(image_path)[0] + "_edge.png"
     cv2.imwrite(output_file_name, final_edges)
+    print("Output image saved!")
     
     # Display the original and the edge-detected image
     cv2.imshow('Original Image', img)
