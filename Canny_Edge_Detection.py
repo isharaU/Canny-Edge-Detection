@@ -134,8 +134,8 @@ def canny_edge_detection(image_path):
     
     # Step 5: Apply double threshold to determine potential edges
     print("Applying double thresholding...")
-    low_threshold = 50
-    high_threshold = 150
+    low_threshold = 1
+    high_threshold = 10
     threshold_img, weak, strong = threshold(non_max_img, low_threshold, high_threshold)
     
     # Step 6: Perform edge tracking by hysteresis
@@ -143,7 +143,7 @@ def canny_edge_detection(image_path):
     final_edges = hysteresis(threshold_img, weak, strong)
     
     # Save the output image with "_edge.png" suffix
-    output_file_name = os.path.splitext(image_path)[0] + "_edge.png"
+    output_file_name = image_path[10:-4] + "_edge.png"
     cv2.imwrite(output_file_name, final_edges)
     print("Saving output!")
     
