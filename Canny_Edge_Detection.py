@@ -134,8 +134,8 @@ def canny_edge_detection(image_path):
     
     # Step 5: Apply double threshold to determine potential edges
     print("Applying double thresholding...")
-    low_threshold = 50
-    high_threshold = 150
+    low_threshold = 5
+    high_threshold = 30
     threshold_img, weak, strong = threshold(non_max_img, low_threshold, high_threshold)
     
     # Step 6: Perform edge tracking by hysteresis
@@ -143,8 +143,11 @@ def canny_edge_detection(image_path):
     final_edges = hysteresis(threshold_img, weak, strong)
     
     # Save the output image with "_edge.png" suffix
-    output_file_name = os.path.splitext(image_path)[0] + "_edge.png"
-    cv2.imwrite(output_file_name, final_edges)
+    output_file_name = image_path[10:-4] + "_edge.png"
+    try:
+        cv2.imwrite(output_file_name, final_edges)
+    except cv2.error as e:
+        print(f"Error saving the output file {output_file_name}: {e}")
     print("Saving output!")
     
     # Display the original and the edge-detected image
@@ -196,8 +199,19 @@ if __name__ == "__main__":
             continue
 
     print(f"You chose {chosen_image}")
-    image_grayscale = convert_to_grayscale(chosen_image)
-    image_grayscale.save("grayscale_" + chosen_image)
+
+    try:
+        image_grayscale = convert_to_grayscale(chosen_image)
+    except:
+        print("Error converting the image to grayscale.")
+        sys.exit(1)
+
+    try:
+        image_grayscale.save("grayscale_" + chosen_image)
+    except:
+        print("Error saving the grayscale image.")
+        sys.exit(1)
+   
     canny_edge_detection("grayscale_" + chosen_image)
 
 
